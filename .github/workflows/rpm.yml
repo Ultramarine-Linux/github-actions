@@ -29,4 +29,4 @@ jobs:
       - run: echo "$TELEPORT_IDENTITY" > identity
         env:
          TELEPORT_IDENTITY: ${{ secrets.teleportIdentity }}
-      - run: tsh ssh -i identity --proxy teleport.ultramarine-linux.org autobuild@lapis.ultramarine-linux.org "mkdir -p ./build && cd ./build && git clone ${{ github.repositoryUrl }} && cd * && git checkout ${{ github.ref_name }} && umpkg push ${{ github.ref_name }} && cd .. && rm -rf *"
+      - run: tsh ssh -i identity --proxy teleport.ultramarine-linux.org autobuild@lapis.ultramarine-linux.org "mkdir -p ./build && cd ./build && git clone https://github.com/${{ github.repository }} ${{ github.repository }}  && pushd ${{ github.repository }} && git checkout ${{ github.ref_name }} && umpkg push ${{ github.ref_name }} && popd && rm -rf ${{ github.repository }}"
