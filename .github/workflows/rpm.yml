@@ -1,0 +1,32 @@
+name: Push RPM Build
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        required: true
+        type: string
+      runsOn:
+        required: false
+        default: ubuntu-latest
+        type: string
+    secrets:
+      teleportIdentity:
+        required: true
+  # Only run on branches that are not main
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - run: sudo curl https://deb.releases.teleport.dev/teleport-pubkey.asc -o /usr/share/keyrings/teleport-archive-keyring.asc
+      - run: echo "deb [signed-by=/usr/share/keyrings/teleport-archive-keyring.asc] https://deb.releases.teleport.dev/ stable main" | sudo tee /etc/apt/sources.list.d/teleport.list > /dev/null
+      - run: sudo apt-get update -y
+      - run: sudo apt-get install teleport -y
+      - run: echo "$TELEPORT_IDENTITY" > identity
+        env:
+         TELEPORT_IDENTITY: ${{ secrets.teleportIdentity }}
+      - run: tsh ssh -i identity --proxy teleport.ultramarine-linux.org autobuild@lapis.ultramarine-linux.org "mkdir -p ./build && cd ./build && git clone ${{ github.repositoryUrl }} && cd * && git checkout ${{ github.ref_name }} && umpkg push ${{ github.ref_name }} && cd .. && rm -rf *"
